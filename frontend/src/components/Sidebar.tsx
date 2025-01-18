@@ -8,6 +8,8 @@ import {
   faHome,
 } from "@fortawesome/free-solid-svg-icons";
 import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import Cookie from "js-cookie";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -24,6 +26,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     { label: "Settings", icon: faCog, id: "settings", path: "/settings" },
     { label: "Help", icon: faQuestionCircle, id: "help", path: "/help" },
   ];
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await axios.post("/api/v1/users/logout", {}, { withCredentials: true });
+      Cookie.remove("token");
+      navigate("/login"); // Navigate to the login page
+    } catch (error) {
+      console.error("Logout failed:", error);
+      alert("Failed to log out. Please try again.");
+    }
+  };
 
   return (
     <div
@@ -52,7 +66,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
         {/* Sidebar Footer */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-          <button className="flex items-center w-full text-left px-4 py-3 rounded transition-all bg-gray-100 hover:bg-red-100 text-gray-800 hover:text-red-600 dark:bg-gray-700 dark:hover:bg-red-600 dark:text-white dark:hover:text-white">
+          <button
+            onClick={handleLogout}
+            className="flex items-center w-full text-left px-4 py-3 rounded transition-all bg-gray-100 hover:bg-red-100 text-gray-800 hover:text-red-600 dark:bg-gray-700 dark:hover:bg-red-600 dark:text-white dark:hover:text-white"
+          >
             <FontAwesomeIcon icon={faSignOutAlt} className="mr-3 text-lg" />
             Logout
           </button>

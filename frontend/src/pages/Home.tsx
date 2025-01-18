@@ -15,17 +15,19 @@ const Home: React.FC = () => {
   const fetchPosts = async (page: number) => {
     setLoading(true);
     try {
-      const response = await axios.get("http://localhost:5000/api/v1/posts/all", {
+      const response = await axios.get("/api/v1/posts/all", {
         params: { page, limit: 5 }, // Adjust the limit as needed
-        withCredentials: true
+        withCredentials: true,
       });
 
       const newPosts = response.data.posts;
-      
+
       // Filter out duplicates if newPosts already exist in the posts state
       const updatedPosts = [
         ...posts,
-        ...newPosts.filter((newPost: any) => !posts.some((post: any) => post._id === newPost._id))
+        ...newPosts.filter(
+          (newPost: any) => !posts.some((post: any) => post._id === newPost._id)
+        ),
       ];
 
       if (newPosts.length > 0) {
@@ -67,10 +69,13 @@ const Home: React.FC = () => {
         if (index === posts.length - 1) {
           // Attach observer to the last post
           return (
-            <div ref={lastPostRef} key={post._id}> {/* Use post._id as the unique key */}
+            <div ref={lastPostRef} key={post._id}>
+              {" "}
+              {/* Use post._id as the unique key */}
               <Post
                 postId={post._id}
                 author={post.author.name}
+                authorId={post.author._id}
                 content={post.content}
                 timePosted={new Date(post.createdAt).toLocaleString()}
                 initialLikes={post.likes.length}
@@ -80,17 +85,20 @@ const Home: React.FC = () => {
                   content: comment.content,
                   date: new Date(comment.date),
                 }))}
-                images={post.photo?.map((base64: string) => `data:image/png;base64,${base64}`)}
-                />
+                images={post.photo?.map(
+                  (base64: string) => `data:image/png;base64,${base64}`
+                )}
+              />
             </div>
           );
         }
 
         return (
           <Post
-          key={post._id}
+            key={post._id}
             postId={post._id}
             author={post.author.name}
+            authorId={post.author._id}
             content={post.content}
             timePosted={new Date(post.createdAt).toLocaleString()}
             initialLikes={post.likes.length}
@@ -100,12 +108,16 @@ const Home: React.FC = () => {
               content: comment.content,
               date: new Date(comment.date),
             }))}
-            images={post.photo?.map((base64: string) => `data:image/png;base64,${base64}`)}
+            images={post.photo?.map(
+              (base64: string) => `data:image/png;base64,${base64}`
+            )}
           />
         );
       })}
-      {loading && <p>Loading...</p>}
-      {!hasMore && <p>No more posts to show</p>}
+      <div className="flex flex-col w-full items-center justify-center">
+        {loading && <p>Loading...</p>}
+        {!hasMore && <p>No more posts to show</p>}
+      </div>
     </>
   );
 };

@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaperclip } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const WritePost: React.FC = () => {
   const [isFocused, setIsFocused] = useState(false);
   const [content, setContent] = useState("");
   const [files, setFiles] = useState<FileList | null>(null); // To handle multiple files
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +36,7 @@ const WritePost: React.FC = () => {
       // Reset form
       setContent("");
       setFiles(null);
+      navigate(0);
     } catch (error) {
       console.error("Error creating post:", error);
     }

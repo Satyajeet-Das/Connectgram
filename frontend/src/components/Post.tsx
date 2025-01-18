@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { timeAgo } from "../utils/timeAgo";
 import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface Comment {
   author: string;
@@ -12,6 +13,7 @@ interface Comment {
 interface PostProps {
   postId: string; // Add the postId to be passed as a prop
   author: string;
+  authorId: string;
   content: string;
   timePosted: string;
   initialLikes?: number;
@@ -23,6 +25,7 @@ interface PostProps {
 const Post: React.FC<PostProps> = ({
   postId,
   author,
+  authorId,
   content,
   timePosted,
   initialLikes = 0,
@@ -42,6 +45,7 @@ const Post: React.FC<PostProps> = ({
   const [newImages, setNewImages] = useState<FileList | null>(null);
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState<boolean>(false);
   const {user} = useAuth();
+  const navigate = useNavigate();
 
 
   const toggleLike = async () => {
@@ -105,33 +109,35 @@ const Post: React.FC<PostProps> = ({
       const response = await axios.delete(`/api/v1/posts/delete/${postId}`, {withCredentials: true});
       console.log("Post deleted:", response.data);
       // Optionally, you can trigger a state update to remove this post from the UI
+      navigate(0);
     } catch (error) {
       console.error("Error deleting post:", error);
     }
   };
-
+  
   const confirmDelete = () => {
     setIsDeleteConfirmationOpen(true);
     setShowOptions(false);
   };
-
+  
   const cancelDelete = () => {
     setIsDeleteConfirmationOpen(false);
   };
-
+  
   const handleSaveEdit = async () => {
     const formData = new FormData();
     formData.append("content", newContent);
     if (newImages) {
       Array.from(newImages).forEach((image) => formData.append("photo", image));
     }
-
+    
     try {
       const response = await axios.put(`/api/v1/posts/update/${postId}`, formData, {withCredentials: true});
       console.log("Post updated:", response.data);
       setIsEditDialogOpen(false);
       setNewContent(response.data.content);
       // Optionally, you can update the post content and images in the state after successful update
+      navigate(0);
     } catch (error) {
       console.error("Error updating post:", error);
     }
@@ -151,12 +157,12 @@ const Post: React.FC<PostProps> = ({
             </div>
           </div>
           <div className="relative">
-            <div
+            {user._id === authorId && <div
               className="cursor-pointer text-gray-500 dark:text-gray-400"
               onClick={toggleOptions}
             >
               &#8230;
-            </div>
+            </div>}
             {showOptions && (
               <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 border rounded-lg shadow-lg z-10">
                 <button
@@ -297,6 +303,7 @@ const Post: React.FC<PostProps> = ({
               />
               <input
                 type="file"
+                accept="image/*"
                 multiple
                 onChange={(e) => setNewImages(e.target.files)}
                 className="mt-4"

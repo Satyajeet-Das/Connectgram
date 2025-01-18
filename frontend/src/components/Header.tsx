@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faBell, faUserCircle, faMoon, faSun } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../contexts/AuthContext";
@@ -8,21 +8,35 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
-  // State to track whether dark mode is enabled or not
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Retrieve the theme preference from localStorage
+    const savedTheme = localStorage.getItem("theme");
+    return savedTheme === "dark";
+  });
+
   const { user } = useAuth();
 
-  // Toggle the theme
+  useEffect(() => {
+    // Apply the theme on component mount
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDarkMode]);
+
+  // Toggle the theme and save the preference
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle("dark", !isDarkMode); // Toggle dark class on the root element
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    localStorage.setItem("theme", newTheme ? "dark" : "light");
+    document.documentElement.classList.toggle("dark", newTheme);
   };
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-md py-4 px-6 flex items-center justify-between z-40">
       {/* Left Section: Hamburger Menu and Logo */}
       <div className="flex items-center space-x-4">
-        {/* Hamburger Menu for Mobile */}
         <button
           className="md:hidden p-2 bg-gray-100 dark:bg-gray-700 rounded-full shadow hover:bg-gray-200 dark:hover:bg-gray-600 transition-all ease-in-out duration-200"
           onClick={onToggleSidebar}
@@ -30,8 +44,6 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         >
           <FontAwesomeIcon icon={faBars} className="text-gray-800 dark:text-white w-5 h-5" />
         </button>
-
-        {/* Logo or Title */}
         <h1 className="text-xl font-semibold text-gray-800 dark:text-white tracking-wide">
           Connectgram
         </h1>
@@ -39,7 +51,6 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
 
       {/* Right Section: Notifications, Profile, and Theme Toggle */}
       <div className="flex items-center space-x-6">
-        {/* Notification Icon */}
         <button
           className="relative p-2 bg-gray-100 dark:bg-gray-700 rounded-full shadow hover:bg-gray-200 dark:hover:bg-gray-600 transition-all ease-in-out duration-200"
           aria-label="Notifications"
@@ -61,6 +72,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
             className="text-gray-800 dark:text-white w-5 h-5"
           />
         </button>
+
         {/* User Profile */}
         <div className="flex items-center space-x-2 cursor-pointer">
           <FontAwesomeIcon icon={faUserCircle} className="text-gray-800 dark:text-white w-8 h-8" />
@@ -68,7 +80,6 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
             {`Welcome, ${user.name}`}
           </span>
         </div>
-
       </div>
     </header>
   );

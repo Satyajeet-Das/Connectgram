@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMoon, faSun } from "@fortawesome/free-solid-svg-icons";
 import Sun from "../assets/sun.svg";
@@ -13,7 +13,10 @@ interface SignInFormData {
 }
 
 const SignIn: React.FC = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    return savedTheme === "dark";
+  });
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] =
     useState(false);
@@ -46,14 +49,18 @@ const SignIn: React.FC = () => {
           password: formData.password,
         },
         {
-          withCredentials: true
+          withCredentials: true,
         }
       );
 
       if (!response.data.isError) {
         setSuccess("Login successful! Welcome, " + response.data.name);
-        alert("Login successful! Welcome, " + response.data.name);
-        Cookie.set("token", response.data.token, {path: '/', expires: 1, secure: false});
+        // alert("Login successful! Welcome, " + response.data.name);
+        Cookie.set("token", response.data.token, {
+          path: "/",
+          expires: 1,
+          secure: false,
+        });
         setFormData({
           username: "",
           password: "",
@@ -76,9 +83,20 @@ const SignIn: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    // Apply the theme on component mount
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDarkMode]);
+
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle("dark", !isDarkMode);
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    localStorage.setItem("theme", newTheme ? "dark" : "light");
+    document.documentElement.classList.toggle("dark", newTheme);
   };
 
   const handleForgotPasswordClick = async () => {
@@ -107,13 +125,10 @@ const SignIn: React.FC = () => {
 
   const handleOtpSubmit = async () => {
     try {
-      const response = await axios.post(
-        "/api/v1/users/checkOTP",
-        {
-          otp: parseInt(enteredOtp),
-          username: formData.username,
-        }
-      );
+      const response = await axios.post("/api/v1/users/checkOTP", {
+        otp: parseInt(enteredOtp),
+        username: formData.username,
+      });
       if (!response.data.isError) {
         setOtp(enteredOtp);
         setIsOtpModalOpen(false);
@@ -137,14 +152,11 @@ const SignIn: React.FC = () => {
 
   const handlePasswordResetSubmit = async () => {
     try {
-      const response = await axios.post(
-        "/api/v1/users/resetPassword",
-        {
-          code: parseInt(otp),
-          username: formData.username,
-          newPassword: newPassword,
-        }
-      );
+      const response = await axios.post("/api/v1/users/resetPassword", {
+        code: parseInt(otp),
+        username: formData.username,
+        newPassword: newPassword,
+      });
       if (!response.data.isError) {
         setOtp("");
         alert("Password reset successful!");
@@ -192,7 +204,7 @@ const SignIn: React.FC = () => {
         </div>
       </header>
       <section className="bg-white dark:bg-gray-900">
-        <div className="lg:grid lg:min-h-[90vh] lg:grid-cols-12">
+        <div className="min-h-[90vh] lg:grid lg:grid-cols-12">
           <section className="relative flex h-32 items-end bg-gray-900 lg:col-span-5 lg:h-full xl:col-span-6">
             <img
               alt=""
