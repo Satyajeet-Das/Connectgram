@@ -11,13 +11,13 @@ dotenv.config();
 const app: Application = express();
 
 app.use(express.json());
-app.use(express.urlencoded({extended: true}))
-app.use(cookieParser());    
-app.use(cors({
-    origin: "http://localhost:5173",
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(
+  cors({
     credentials: true,
-  }));
-  
+  })
+);
 
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/posts", postRoutes);
