@@ -52,7 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
         {/* Sidebar Footer */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-          <button className="flex items-center w-full text-left px-4 py-3 rounded transition-all bg-gray-100 hover:bg-red-100 text-gray-800 hover:text-red-600 dark:bg-gray-700 dark:hover:bg-red-600 dark:text-white dark:hover:text-red-400">
+          <button className="flex items-center w-full text-left px-4 py-3 rounded transition-all bg-gray-100 hover:bg-red-100 text-gray-800 hover:text-red-600 dark:bg-gray-700 dark:hover:bg-red-600 dark:text-white dark:hover:text-white">
             <FontAwesomeIcon icon={faSignOutAlt} className="mr-3 text-lg" />
             Logout
           </button>

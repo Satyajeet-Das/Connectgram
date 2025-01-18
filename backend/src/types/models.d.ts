@@ -13,7 +13,7 @@ interface IUser extends Document {
 
 interface IPost extends Document {
     _id: Types.ObjectId,
-    photo?: Buffer,
+    photo?: Buffer[],
     content: string,
     author: Types.ObjectId,
     date: Date,

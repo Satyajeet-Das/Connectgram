@@ -3,7 +3,7 @@ import { IPost } from "../types/models";
 
 const PostSchema: Schema<IPost> = new Schema(
   {
-    photo: { type: Buffer },
+    photo: [{ type: Buffer }],
     content: { type: String, required: true },
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
     date: { type: Date, default: Date.now },

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faBell, faUserCircle, faMoon, faSun } from "@fortawesome/free-solid-svg-icons";
+import { useAuth } from "../contexts/AuthContext";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -9,6 +10,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   // State to track whether dark mode is enabled or not
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const { user } = useAuth();
 
   // Toggle the theme
   const toggleTheme = () => {
@@ -63,7 +65,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         <div className="flex items-center space-x-2 cursor-pointer">
           <FontAwesomeIcon icon={faUserCircle} className="text-gray-800 dark:text-white w-8 h-8" />
           <span className="hidden md:block text-gray-700 dark:text-gray-300 font-medium">
-            Welcome, User
+            {`Welcome, ${user.name}`}
           </span>
         </div>
 

@@ -10,17 +10,19 @@ export const getMedia = async (req: Request, res: Response): Promise<void> => {
   try {
     const posts = await Post.find()
       .populate("author", "name")
-      .populate("likes", "name")
+      // .populate("likes", "name")
       .populate({path: "comments", populate: {path: "author", select: "name"}})
       .skip((page - 1) * limit)
       .limit(limit);
 
-    const postsWithBase64 = posts.map((post) => {
-      return {
-        ...post.toObject(),
-        photo: post.photo ? post.photo.toString("base64") : null,
-      };
-    });
+      const postsWithBase64 = posts.map((post) => {
+        return {
+          ...post.toObject(),
+          photo: Array.isArray(post.photo)
+            ? post.photo.map((buffer) => buffer.toString("base64"))
+            : null,
+        };
+      });      
 
     const comments = await Comment.find().populate("author");
 
@@ -34,7 +36,7 @@ export const getMedia = async (req: Request, res: Response): Promise<void> => {
 export const postMedia = async (req: Request, res: Response): Promise<void> => {
   try {
     const { content } = req.body;
-    const { userId } = req.user as JwtPayloadWithUserId; // TypeScript now knows userId exists
+    const { userId } = req.user as JwtPayloadWithUserId;
 
     if (!userId) {
       res
@@ -43,14 +45,16 @@ export const postMedia = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    let photoImage: Buffer | undefined;
-    if (req.file) {
-      // Extract the buffer from Multer's req.file
-      photoImage = req.file.buffer;
+    let photo: Buffer[] = [];
+    
+    // Check and type the files as an array of Express.Multer.File
+    if (req.files && Array.isArray(req.files)) {
+      // Assuming the files are an array, map them to their buffers
+      photo = (req.files as Express.Multer.File[]).map((file) => file.buffer);
     }
 
     const newPost = new Post({
-      photo: photoImage,
+      photo, // Save multiple photos as an array
       content,
       author: userId,
       comments: [],
@@ -71,14 +75,13 @@ export const postMedia = async (req: Request, res: Response): Promise<void> => {
 };
 
 
-export const updatePost = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+
+
+export const updatePost = async (req: Request, res: Response): Promise<void> => {
   try {
     const { postId } = req.params;
-    const { content } = req.body; // postId and content from the request body
-    const { userId } = req.user as JwtPayloadWithUserId; // Extract userId from req.user
+    const { content } = req.body;
+    const { userId } = req.user as JwtPayloadWithUserId;
 
     if (!userId) {
       res
@@ -107,9 +110,10 @@ export const updatePost = async (
       post.content = content;
     }
 
-    if (req.file) {
-      const photoBuffer = req.file.buffer;
-      post.photo = photoBuffer;
+    if (req.files && Array.isArray(req.files)) {
+      // Process multiple files
+      const photoBuffers = (req.files as Express.Multer.File[]).map((file) => file.buffer);
+      post.photo = photoBuffers; // Save multiple photos as an array
     }
 
     // Save the updated post
@@ -123,6 +127,8 @@ export const updatePost = async (
     res.status(500).json({ isError: true, message: "Error updating post" });
   }
 };
+
+
 
 export const deletePost = async (
   req: Request,

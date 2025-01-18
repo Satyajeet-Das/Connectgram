@@ -4,6 +4,8 @@ import { generateCode } from "../utils/generateCode";
 import User from "../models/user";
 import jwt from "jsonwebtoken";
 import { sendMail } from "../utils/sendMail";
+import "dotenv/config";
+import { JwtPayloadWithUserId } from "../types/payload";
 
 export const registerUser = async (
   req: Request,
@@ -43,9 +45,11 @@ export const registerUser = async (
     user = new User(req.body);
     await user.save();
 
-    res
-      .status(200)
-      .json({ isError: false, message: "User Registered Successfully" });
+    res.status(200).json({
+      isError: false,
+      message: "User Registered Successfully",
+      name: user.name,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ isError: true, message: "Something Went Wrong" });
@@ -54,42 +58,37 @@ export const registerUser = async (
 };
 
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
-  // const errors = validationResult(req);
-  // if (!errors.isEmpty()) {
-  //     res.status(400).json({message:  errors.array()});
-  //     return;
-  // }
   const { username, password } = req.body;
   try {
     let user = await User.findOne({ username });
     if (!user) {
-      res.status(400).json({ message: "Invalid Credentials" });
+      res.status(400).json({ isError: true, message: "Invalid Credentials" });
       return;
     }
 
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
-      res.status(400).json({ message: "Invalid Credentials" });
+      res.status(400).json({ isError: true, message: "Invalid Credentials" });
       return;
     }
 
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: user._id, name: user.name },
       process.env.SECRET_KEY as string,
-      { expiresIn: "1h" }
+      { expiresIn: "1d" }
     );
 
     res.cookie("authToken", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: false,
       maxAge: 86400000,
     });
 
-    res.status(200).json({ token: token });
+    res.status(200).json({ isError: false, token: token, name: user.name });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Something Went Wrong" });
+    res.status(500).json({ isError: false, message: "Something Went Wrong" });
   }
 };
 
@@ -103,8 +102,8 @@ export const forgotPassword = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { email } = req.body;
-    const user = await User.findOne({ email });
+    const { username } = req.body;
+    const user = await User.findOne({ username });
     if (!user) {
       res.status(400).json({ message: "User Not Found" });
       return;
@@ -134,9 +133,9 @@ export const verifyAndResetPassword = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { email, code, newPassword } = req.body;
+  const { username, code, newPassword } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ username });
     if (!user) {
       res.status(400).json({ isError: true, message: "User Not Found" });
       return;
@@ -163,5 +162,49 @@ export const verifyAndResetPassword = async (
   } catch (error) {
     console.log(error);
     res.status(500).json({ isError: true, message: "Something Went Wrong" });
+  }
+};
+
+export const checkOTP = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { otp, username } = req.body;
+    const user = await User.findOne({ username });
+    if (!user) {
+      res.status(400).json({ isError: true, message: "User Not Found" });
+      return;
+    }
+
+    if (!user.resetPasswordCode || user.resetPasswordCode != otp) {
+      res.status(400).json({ isError: true, message: "Invalid OTP" });
+      return;
+    }
+
+    if (!user.resetPasswordExpiry || user.resetPasswordExpiry < new Date()) {
+      res.status(400).json({ isError: true, message: "OTP Expired" });
+      return;
+    }
+
+    res.status(200).json({ isError: false, message: "OTP Verified" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ isError: true, message: "Something Went Wrong" });
+  }
+};
+
+export const verifyToken = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { userId } = req.user as JwtPayloadWithUserId;
+    const user = await User.findById(userId).select('_id name username');
+    if (!user) {
+      res.status(400).json({ isAuthenticated: false, message: "User Not Found" });
+      return;
+    }
+    res.status(200).json({ isAuthenticated: true, user: user, message: "Token Verified" });
+  } catch (error) {
+    console.log(error);
+    res.status(401).json({ isAuthenticated: false, message: "Unauthorized" });
   }
 };
