@@ -115,7 +115,8 @@ const Home: React.FC = () => {
         );
       })}
       <div className="flex flex-col w-full items-center justify-center">
-        {loading && <p>Loading...</p>}
+        {loading && <div className="loader w-32 h-32 border-4 border-gray-200 border-t-4 border-t-blue-500 rounded-full animate-spin"></div>
+        }
         {!hasMore && <p>No more posts to show</p>}
       </div>
     </>
