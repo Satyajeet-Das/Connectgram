@@ -68,7 +68,7 @@ const WritePost: React.FC = () => {
           {/* Attach File and Post Buttons */}
           <div className="flex justify-between items-center">
             {/* Attach File */}
-            <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
+            <div className="flex flex-col items-start space-y-2 text-gray-600 dark:text-gray-400">
               <label
                 htmlFor="file-upload"
                 className="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 flex items-center space-x-2 cursor-pointer"
@@ -85,6 +85,15 @@ const WritePost: React.FC = () => {
                 accept="image/*"
                 multiple // Allow selecting multiple files
               />
+
+              {/* Show selected files */}
+              {files && (
+                <ul className="list-disc pl-5 text-xs text-gray-600 dark:text-gray-400">
+                  {Array.from(files).map((file, index) => (
+                    <li key={index}>{file.name}</li>
+                  ))}
+                </ul>
+              )}
               <span className="text-xs">JPG, JPEG, PNG, etc.</span>
             </div>
 

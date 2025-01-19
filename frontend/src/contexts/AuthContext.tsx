@@ -47,8 +47,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
   if (isAuthenticated === null) {
     // Loading state
-    return <div className="loader w-32 h-32 border-4 border-gray-200 border-t-4 border-t-blue-500 rounded-full animate-spin"></div>
-
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="loader w-32 h-32 border-4 border-gray-200 border-t-4 border-t-blue-500 rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   return (

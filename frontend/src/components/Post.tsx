@@ -3,6 +3,8 @@ import axios from "axios";
 import { timeAgo } from "../utils/timeAgo";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 
 interface Comment {
   author: string;
@@ -43,16 +45,20 @@ const Post: React.FC<PostProps> = ({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
   const [newContent, setNewContent] = useState<string>(content);
   const [newImages, setNewImages] = useState<FileList | null>(null);
-  const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState<boolean>(false);
-  const {user} = useAuth();
+  const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] =
+    useState<boolean>(false);
+  const { user } = useAuth();
   const navigate = useNavigate();
 
-
   const toggleLike = async () => {
-    try{
+    try {
       setLikes(liked ? likes - 1 : likes + 1);
       setLiked(!liked);
-      await axios.post(`/api/v1/posts/addLike/${postId}`, {}, {withCredentials: true});
+      await axios.post(
+        `/api/v1/posts/addLike/${postId}`,
+        {},
+        { withCredentials: true }
+      );
     } catch (error) {
       console.log("Error adding/removing like: ", error);
     }
@@ -75,12 +81,17 @@ const Post: React.FC<PostProps> = ({
     try {
       if (newComment.trim()) {
         console.log(newComment);
-        const newCommentData = {comment: newComment};
-        await axios.post(`/api/v1/posts/addComment/${postId}`, newCommentData, {withCredentials: true});
-        setComments([{author: user.name, content: newComment, date: new Date() }, ...comments]);
+        const newCommentData = { comment: newComment };
+        await axios.post(`/api/v1/posts/addComment/${postId}`, newCommentData, {
+          withCredentials: true,
+        });
+        setComments([
+          { author: user.name, content: newComment, date: new Date() },
+          ...comments,
+        ]);
         setNewComment("");
       }
-    } catch(err){
+    } catch (err) {
       console.error("Error adding comment: ", err);
     }
   };
@@ -106,7 +117,9 @@ const Post: React.FC<PostProps> = ({
 
   const handleDelete = async () => {
     try {
-      const response = await axios.delete(`/api/v1/posts/delete/${postId}`, {withCredentials: true});
+      const response = await axios.delete(`/api/v1/posts/delete/${postId}`, {
+        withCredentials: true,
+      });
       console.log("Post deleted:", response.data);
       // Optionally, you can trigger a state update to remove this post from the UI
       navigate(0);
@@ -114,25 +127,29 @@ const Post: React.FC<PostProps> = ({
       console.error("Error deleting post:", error);
     }
   };
-  
+
   const confirmDelete = () => {
     setIsDeleteConfirmationOpen(true);
     setShowOptions(false);
   };
-  
+
   const cancelDelete = () => {
     setIsDeleteConfirmationOpen(false);
   };
-  
+
   const handleSaveEdit = async () => {
     const formData = new FormData();
     formData.append("content", newContent);
     if (newImages) {
       Array.from(newImages).forEach((image) => formData.append("photo", image));
     }
-    
+
     try {
-      const response = await axios.put(`/api/v1/posts/update/${postId}`, formData, {withCredentials: true});
+      const response = await axios.put(
+        `/api/v1/posts/update/${postId}`,
+        formData,
+        { withCredentials: true }
+      );
       console.log("Post updated:", response.data);
       setIsEditDialogOpen(false);
       setNewContent(response.data.content);
@@ -157,12 +174,14 @@ const Post: React.FC<PostProps> = ({
             </div>
           </div>
           <div className="relative">
-            {user._id === authorId && <div
-              className="cursor-pointer text-gray-500 dark:text-gray-400"
-              onClick={toggleOptions}
-            >
-              &#8230;
-            </div>}
+            {user._id === authorId && (
+              <div
+                className="cursor-pointer text-gray-500 dark:text-gray-400"
+                onClick={toggleOptions}
+              >
+                &#8230;
+              </div>
+            )}
             {showOptions && (
               <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 border rounded-lg shadow-lg z-10">
                 <button
@@ -198,18 +217,24 @@ const Post: React.FC<PostProps> = ({
               />
             ))}
           </div>
-          <div
-            className="absolute top-1/2 left-0 transform -translate-y-1/2 text-gray-500 text-3xl cursor-pointer p-4 dark:text-gray-500"
-            onClick={prevImage}
-          >
-            &#60;
-          </div>
-          <div
+          {currentIndex !== 0 && (
+            <div
+              className="absolute top-1/2 left-0 transform -translate-y-1/2 text-gray-500 text-3xl cursor-pointer p-4 dark:text-gray-500"
+              onClick={prevImage}
+            >
+              <FontAwesomeIcon icon={faChevronLeft}/>
+              {/* &#60; */}
+            </div>
+          )}
+          {currentIndex !== images.length - 1 && (
+            <div
             className="absolute top-1/2 right-0 transform -translate-y-1/2 text-gray-500 text-3xl cursor-pointer p-4 dark:text-gray-500"
             onClick={nextImage}
-          >
-            &#62;
-          </div>
+            >
+            <FontAwesomeIcon icon={faChevronRight}/>
+              {/* &#62; */}
+            </div>
+          )}
         </div>
         <div className="flex justify-between items-center text-gray-500 dark:text-gray-400 mt-4">
           <div className="flex space-x-4">
